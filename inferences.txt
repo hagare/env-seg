@@ -1,0 +1,18 @@
+Based on distribution of % race per county normalized by state race %:
+	white+hispanic most integrated centered around 1
+	blacks right skewed 
+	native mostly integrated, but when not very very segregated (probably reservations)
+	asians 
+	islander like native
+	multi 
+
+ race_label
+[1] "white"     "black"     "native"    "asian"     "islander"  "multi"     "hispanic" 
+[8] "white-non"
+
+perc_race_mean;perc_race_rng; perc_race_med; perc_race_iqr; 
+[1] 0.9619387 0.8263702 1.4591222 0.6138815 0.7393288 0.9191649 0.7773109 0.9876159
+[1]  1.347863  3.974359 13.742925  7.118323 10.000000  2.179074  4.933333  2.002564
+[1] 1.0214286 0.5482375 0.7924528 0.3333333 0.5000000 0.8666667 0.5706522 1.0195783
+[1] 0.3993785 1.2010796 0.6285714 0.5053879 1.0000000 0.3435897 0.6060606 0.4141566
+

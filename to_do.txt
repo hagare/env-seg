@@ -1,0 +1,5 @@
+o Do:
+look up which states/counties have majority race (high segregation) Perc_Race_County-Perc_R$
+look up which states/counties have minority race Perc_Race_County-Perc_Race_State <<1
+look up which states/counties have high integration Perc_Race_County-Perc_Race_State ==1
+Randomly choose 10 from each category and test against env datasets

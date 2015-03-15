@@ -1,80 +1,148 @@
-#Index of dissimilarity
+#Equations taken from Dimensions of Segregation
+#Author: D. Massey
+#file: Social Forces-1988-Massey-281-315.pdf
+# 1. Evenness
+##Index of dissimilarity
 #index measures evenness with which two mutually exclusive groups are distributed across teh geographc units taht make up a larger geographic entity
 #ex: distribution of blacks and whites across counties that make up a state
-#the minimum value is 0 and max is 100
+#the minimum value is 0 and max is 1
 
-#Source http://enceladus.isr.umich.edu/race/calculate.html
-#bi= black small component
-#B= black large geography
-#wi= white small component
-#W=white large geography
-#D=(1/2) SUM (bi /B – wi / W )
-D=NA*1:max(census_fip$state) # initialize var length=total states
-I=NA*1:max(census_fip$state) # initialize var length=total states
-bi=blank
-B=blank
-wi=blank
-W=blank
-state_pop=blank
+#Dissimiliarity Index is a measure of evenness calculated by :
+#D=sum( (ti*abs(pi-P)) / (2*T*P*(1-P)))
+#ti non white total population in sub area
+#pi proportion of non white in sub area
+#T population in big area
+#P proportion in big area
 
-#Dissimilarity between two groups x and y representing vector location on census_data set
-#black 13, white-non-19, white 12
-#ex: use raceCode("black") and raceCode("white-non") or raceCode("white")
-# make vector where rows contain state population to be used with Dis.xy function
-for (j in c(3:3195)) {
-  state_val=census_fip$state[census_fip$code==census_dataset$fips[j]] #choose state
-  state_pop[j]=census_dataset[census_fip$state==state_val&state_rown==T,3] #create vector of state population 2013
-}
-
-Dis.xy<-function(x=raceCode("black"),y=raceCode("white-non")) {
-bi[census_fip$county_rown]=census_dataset[census_fip$county_rown,x]/100*census_dataset[census_fip$county_rown,3] #perc of race in 2013 * tot population 2013= race population
-
-B[census_fip$county_rown]=county.state_perc[census_fip$county_rown,x]/100*state_pop[census_fip$county_rown]
-wi[census_fip$county_rown]=census_dataset[census_fip$county_rown,y]/100*census_dataset[census_fip$county_rown,3]
-W[census_fip$county_rown]=county.state_perc[census_fip$county_rown,y]/100*state_pop[census_fip$county_rown]
-
-  for (i in 1:max(census_fip$state)){ #scroll through to generate D for each state based on county data
-    rown=census_fip$state==i&census_fip$county_rown==T
-    D[i]=0.5*sum(abs((bi[rown]/B[rown])-(wi[rown]/W[rown])))
+### Update with smaller unit level such as zip,census block, or census tract
+#Generate Isolation Matrix for races census_dataset col 12-19 (can expand to other factors by changing column number)
+for (x in c(12:19)) {
+  for (i in 1:56) { #scroll through states or big units
+    if (i==7|i==14|i==43){D.matrix[i,x]=NA
+    }else{
+      #generate county and state rows for each state
+      county.rown=census_fip$state==i&census_fip$county>0 #rows for county or small subset
+      state.rown=census_fip$state==i&census_fip$county==0 #rows for state or big unit
+      
+      ti=census_dataset[county.rown,3] #county pop
+      pi=(census_dataset[county.rown,x]/100)#*census_dataset[county.rown,3]  #race pop county
+      T=sum(ti) #total pop in state by summing county pop
+      P=(census_dataset[state.rown,x]/100) #race pop in state=sum race in all counties
+      D.matrix[i,x]= sum(ti*abs(pi-P)/(2*T*P*(1-P)))
     }
-summary(D)
-hist(D,main=sprintf("Dissimilarity Index for %s and %s",race_label[x-11],race_label[y-11]))
-return(D) 
-}
-
-#Execute function for Dissimilarity Index
-Dis.black_whitenon=Dis.xy(x=raceCode("black"),y=raceCode("white-non"))
-Dis.black_white=Dis.xy(x=raceCode("black"),y=raceCode("white"))
-Dis.hispanic_whitenon=Dis.xy(x=raceCode("hispanic"),y=raceCode("white-non"))
-Dis.asian_whitenon=Dis.xy(x=raceCode("asian"),y=raceCode("white-non"))
-Dis.multi_whitenon=Dis.xy(x=raceCode("multi"),y=raceCode("white-non"))
-
-# Isolation Index
-ti=blank
-Iso.x<-function(x=raceCode("white-non")) {
-  wi[census_fip$county_rown]=(census_dataset[census_fip$county_rown,x]/100)*census_dataset[census_fip$county_rown,3]
-  W[census_fip$county_rown]=(county.state_perc[census_fip$county_rown,x]/100)*state_pop[census_fip$county_rown]
-  ti[census_fip$county_rown]=census_dataset[census_fip$county_rown,3] #total county population
-  for (i in 1:max(census_fip$state)){ #scroll through to generate I for each state based on county data
-    rown=census_fip$state==i&census_fip$county_rown==T
-    I[i]=sum((wi[rown]/W[rown])*(wi[rown]/ti[rown]))/100 #not sure why but Isolation index should be 0 to 1 so divided answer by 100
-    ###Make sure to find error in calculation and fix "/100" is just manual fix
   }
-  summary(I)
-  hist(I,main=sprintf("Isolation Index for %s",race_label[x-11]))
-  return(I) 
+  
 }
 
-#Execute function for Dissimilarity Index
-Iso_whitenon=Iso.x(raceCode("white-non"))
-Iso_white=Iso.x(raceCode("white"))
-Iso_black=Iso.x(raceCode("black"))
-Iso_hispanic=Iso.x(raceCode("hispanic"))
-Iso_asian=Iso.x(raceCode("asian"))
-Iso_multi=Iso.x(raceCode("multi"))
+#Generate Index of Dissimilarity for Races
+mar.4x2=c(4.2, 4.2, 2.5, .75)
+par(mfrow=c(4,2),mar =mar.4x2)
+for (p in c(12:19)){
+  #summary(D)
+  hist(D.matrix[,p],xlab="Dissimilarity",main=sprintf("%s (state level)",race_label[p-11]))
+}
 
 
+# 2. Exposure
+## Isolation Index
+#Measures extent to which minority members are exposed only to one other rather than majority members
+#(minority weighted avg)#ti is the total population of smaller unit
+#I=sum((wi/W)*(wi/ti))
+
+### Update with smaller unit level such as zip,census block, or census tract
+#Generate Isolation Matrix for races census_dataset col 12-19 (can expand to other factors by changing column number)
+for (x in c(12:19)) {
+  for (i in 1:56) { #scroll through states or big units
+    if (i==7|i==14|i==43){I.matrix[i,x]=NA
+    }else{
+    county.rown=census_fip$state==i&census_fip$county>0 #rows for county or small subset
+    state.rown=census_fip$state==i&census_fip$county==0 #rows for state or big unit
+    wi.W=(((census_dataset[county.rown,x]/100)*census_dataset[county.rown,3])/(census_dataset[state.rown,x]/100*sum(census_dataset[county.rown,3])))
+    wi.ti=(((census_dataset[county.rown,x]/100)*census_dataset[county.rown,3])/census_dataset[county.rown,3])
+    
+    I.matrix[i,x]=sum(wi.W*wi.ti)
+    }
+  }
+  
+}
+
+#Generate Distribution of Isolation of Races
+opar=par(mar = c(5, 4, 4, 2) + 0.1)
+mar.4x2=c(4.2, 4.2, 2.5, .75)
+par(mfrow=c(4,2),mar =mar.4x2)
+for (p in c(12:19)){
+  #summary(I)
+  hist(I.matrix[,p],xlab="Isolation",main=sprintf("%s (state level)",race_label[p-11]))
+}
+
+# Interaction Index
+#Measures exposure to degree of potential contact or interaction between minority and majority group members
+#ti is the total population of smaller unit
+#xi minority
+#yi majority
+#Int=sum((xi/X)*(yi/ti))
+Int.matrix=matrix(rep(rep(NA,max(census_fip$state)),dim(census_dataset)[2]),nrow=max(census_fip$state)) #initialize matrix 
+### Update with smaller unit level such as zip,census block, or census tract
+#Generate Interaction Matrix for races census_dataset col 12-19 (can expand to other factors by changing column number)
+for (x in c(12:19)) {
+  for (i in 1:56) { #scroll through states or big units
+    if (i==7|i==14|i==43){Int.matrix[i,x]=NA
+    }else{
+      county.rown=census_fip$state==i&census_fip$county>0 #rows for county or small subset
+      state.rown=census_fip$state==i&census_fip$county==0 #rows for state or big unit
+      xi.X=(((census_dataset[county.rown,x]/100)*census_dataset[county.rown,3])/(census_dataset[state.rown,x]/100*sum(census_dataset[county.rown,3])))
+      yi.ti=census_dataset[county.rown,raceCode("white-non")]/100
+      
+      Int.matrix[i,x]=sum(xi.X*yi.ti)
+    }
+  }
+  
+}
+
+#Generate Distribution of Intsolation of Races
+opar=par(mar = c(5, 4, 4, 2) + 0.1)
+mar.4x2=c(4.2, 4.2, 2.5, .75)
+par(mfrow=c(4,2),mar =mar.4x2)
+for (p in c(12:19)){
+  #summary(Int)
+  hist(Int.matrix[,p],xlab="Interaction",main=sprintf("%s (state level)",race_label[p-11]))
+}
 
 
+# 3. Concentration
+#Concentration refers to the relative amount of physical space occupied buy a minority group
+# Delta is a specific application of dissimilarity
+# Delta=0.5*sum(abs(xi/X-ai/A))
+# xi = minority pop in subarea (county)
+# X = minority pop in geographic area (state)
+# ai = land area of sub area square meters 2010
+# Ai = land area of geographic area square meters 2010
 
 
+### Update with smaller unit level such as zip,census block, or census tract
+#Generate Delta/Spatial Concentration Index Matrix for races census_dataset col 12-19 (can expand to other factors by changing column number)
+Delta.matrix=matrix(rep(rep(NA,max(census_fip$state)),dim(census_dataset)[2]),nrow=max(census_fip$state)) #initialize matrix 
+
+for (x in c(12:19)) {
+  for (i in 1:56) { #scroll through states or big units
+    if (i==7|i==14|i==43){Delta.matrix[i,x]=NA
+    }else{
+      county.rown=census_fip$state==i&census_fip$county>0 #rows for county or small subset
+      state.rown=census_fip$state==i&census_fip$county==0 #rows for state or big unit
+      
+      xi.X=(((census_dataset[county.rown,x]/100)*census_dataset[county.rown,3])/(census_dataset[state.rown,x]/100*sum(census_dataset[county.rown,3])))
+      ai.A=(census_dataset[county.rown,53]/100)/sum(census_dataset[county.rown,53]/100)
+      Delta.matrix[i,x]=0.5*sum(abs(xi.X-ai.A))
+    }
+  }
+  
+}
+
+#Generate Distribution of Deltasolation of Races
+opar=par(mar = c(5, 4, 4, 2) + 0.1)
+mar.4x2=c(4.2, 4.2, 2.5, .75)
+par(mfrow=c(4,2),mar =mar.4x2)
+for (p in c(12:19)){
+  #summary(Delta)
+  hist(Delta.matrix[,p],xlab="Delta/Spatial Concentration Index",main=sprintf("%s (state level)",race_label[p-11]))
+}

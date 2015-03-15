@@ -1,3 +1,40 @@
-## March 15, 2015 HEE
+## March 13, 2015 HEE
 Created README.md with desired data sets and possible sources
 
+## March 14, 2015
+Geographic Units Used in the Census of 2000
+ 
+Geographic Category
+Number of Units in Category
+Average Population
+ 
+Entire Nation
+                          1
+             281,421,906
+Regions
+                          4
+               70,350,000
+Divisions
+                          9
+               31,266,667
+State
+                        50
+                 5,628,000
+Metropolitan Areas
+                      331
+                   682,725
+Congressional Districts
+                      435
+                   646,897
+Counties
+                    3,141
+                     89,589
+Census Tracts
+                  66,304
+                     89,589
+Block Groups
+                211,267
+                       1,332
+Blocks
+              8,262,363
+                           34

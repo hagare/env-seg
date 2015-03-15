@@ -16,7 +16,9 @@ describe(census_dataset[census_fip$county_rown,12])
 
 fivenum(census_dataset[census_fip$county_rown,12])
 
-racial_seg<-function(race){
+#Generate census_data vector when race label specified
+#just for ease of use
+raceCode<-function(race){
 if(race=="white") {raceCode=12}
 if(race=="black") {raceCode=13}
 if(race=="native") {raceCode=14}
@@ -25,10 +27,7 @@ if(race=="islander") {raceCode=16}
 if(race=="multi") {raceCode=17}
 if(race=="hispanic") {raceCode=18}
 if(race=="white-non") {raceCode=19} #white non hispanic
-
-hist(census_dataset[census_fip$county_rown,raceCode]) #percentage alone county level
-hist(census_dataset[census_fip$state_rown,raceCode]) #percentage alone state level
-#hist(census_dataset[census_fip$us_rown,12]) #percentage alone US level
+return(raceCode)
 }
 
 #Are more places integrated or segregated? county level
@@ -38,16 +37,22 @@ race_blank=NA*c(12:19)
 perc_race_rng=race_blank
 perc_race_med=race_blank
 perc_race_iqr=race_blank
+state_perc=blank #initialize %state vector
+county.state_perc=matrix(rep(blank,dim(census_dataset)[2]),nrow=dim(census_dataset)[1])#initialize county/state race ratio matrix
 
 par(mfrow=c(4,2))
 for (i in c(12:19))   hist(census_dataset[census_fip$county_rown,i],main=race_label[i-11],xlab="% of race per county")
 for (i in c(12:19))  { 
-  state_perc=blank
   for (j in c(3:3195)) {
-          state_val=census_fip$state[census_fip$code==census_dataset$fips[j]] #choose state
-  state_perc[j]=census_dataset[census_fip$state==state_val&state_rown==T,i] #create vector of state % for specified race
+    state_val=census_fip$state[census_fip$code==census_dataset$fips[j]] #choose state
+    state_perc[j]=census_dataset[census_fip$state==state_val&state_rown==T,i] #create vector of state % for specified race
   }
-  hist(census_dataset[census_fip$county_rown,i]/state_perc[census_fip$county_rown],main=race_label[i-11],xlab="% of race per county/%state ") 
+  county.state_perc[census_fip$county_rown,i]=census_dataset[census_fip$county_rown,i]/state_perc[census_fip$county_rown] #matrix where rows are county values normalized by state
+  
+  hist(county.state_perc[census_fip$county_rown,i],main=race_label[i-11],xlab="% of race per county/%state ") #new way
+  #hist(census_dataset[census_fip$county_rown,i]/state_perc[census_fip$county_rown,i],main=race_label[i-11],xlab="% of race per county/%state ") #old way
+
+
 #perc_race_mean[i-11]=mean(census_dataset[census_fip$county_rown,i]/state_perc[census_fip$county_rown],na.rm=T)
 # perc_race_med[i-11]=median(census_dataset[census_fip$county_rown,i]/state_perc[census_fip$county_rown],na.rm=T)
 # perc_race_iqr[i-11]=IQR(census_dataset[census_fip$county_rown,i]/state_perc[census_fip$county_rown],na.rm=T)
@@ -60,3 +65,10 @@ for (i in c(12:19))
 }
 
 for (i in c(12:19)) hist(census_dataset[census_fip$state_rown,i]/census_dataset[census_fip$us_rown,i],main=race_label[i-11],xlab="% of race per state/%us ")
+
+
+#What are state rankings for the highest level of racial segregation in terms of black people
+
+
+#How segregated is the US?
+source('indices.R')
